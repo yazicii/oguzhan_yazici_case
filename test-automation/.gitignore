@@ -1,0 +1,16 @@
+# Build output
+target/
+
+# IDE
+.idea/
+*.iml
+
+# Allure local install
+.allure/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

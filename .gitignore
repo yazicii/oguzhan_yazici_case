@@ -1,0 +1,14 @@
+# Build output
+target/
+.allure/
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

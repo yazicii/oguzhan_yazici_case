@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.insider</groupId>
+    <artifactId>load-automation</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.lazerycode.jmeter</groupId>
+                <artifactId>jmeter-maven-plugin</artifactId>
+                <version>3.8.0</version>
+                <executions>
+                    <execution>
+                        <id>configuration</id>
+                        <goals>
+                            <goal>configure</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jmeter-tests</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jmeter</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jmeter-check-results</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>results</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <testResultsTimestamp>false</testResultsTimestamp>
+                    <!-- n11 may return 403; keep generating reports, don't break the build -->
+                    <ignoreResultFailures>true</ignoreResultFailures>
+                    <!-- Only n11 load test (Petstore is excluded) -->
+                    <testFilesIncluded>
+                        <jMeterTestFile>N11SearchLoad.jmx</jMeterTestFile>
+                    </testFilesIncluded>
+                    <!-- HTML dashboard: target/jmeter/reports/index.html -->
+                    <generateReports>true</generateReports>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- Parallel: each <test> block runs in its own thread. -->
+<suite name="Insider Suite (parallel tests)" verbose="2" parallel="tests" thread-count="2">
+
+    <listeners>
+        <listener class-name="org.insider.listeners.AllureFailureListener"/>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+    </listeners>
+
+    <test name="Home Page Tests">
+        <classes>
+            <class name="org.insider.homepage.HomePageTests"/>
+        </classes>
+    </test>
+
+    <test name="Careers Page Tests">
+        <classes>
+            <class name="org.insider.careers.CareersPageTests"/>
+        </classes>
+    </test>
+
+</suite>
