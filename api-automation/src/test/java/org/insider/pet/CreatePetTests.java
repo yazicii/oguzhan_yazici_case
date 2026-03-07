@@ -112,20 +112,19 @@ public class CreatePetTests extends BaseApiTest {
                 .statusCode(anyOf(equalTo(400), equalTo(405), equalTo(500)));
     }
 
-    @Test(description = "Create a pet with empty body")
+    @Test(description = "Create a pet with empty body — expect validation error")
     @Severity(SeverityLevel.NORMAL)
-    @Description("POST /pet — Verify behavior when empty body is sent")
+    @Description("POST /pet — API should reject empty body (missing required name, photoUrls)")
     public void createPetWithEmptyBody() {
         Response response = petApi.createPetWithRawBody("{}");
 
         response.then()
-                .statusCode(200)
-                .body("id", notNullValue());
+                .statusCode(anyOf(equalTo(400), equalTo(405), equalTo(422)));
     }
 
-    @Test(description = "Create a pet with negative ID")
+    @Test(description = "Create a pet with negative ID — expect validation error")
     @Severity(SeverityLevel.MINOR)
-    @Description("POST /pet — Create with negative id")
+    @Description("POST /pet — API should reject negative id")
     public void createPetWithNegativeId() {
         Pet pet = Pet.builder()
                 .id(-1L)
@@ -133,9 +132,10 @@ public class CreatePetTests extends BaseApiTest {
                 .photoUrls(List.of("https://example.com/neg.jpg"))
                 .build();
 
-        petApi.createPet(pet)
-                .then()
-                .statusCode(200);
+        Response response = petApi.createPet(pet);
+
+        response.then()
+                .statusCode(anyOf(equalTo(400), equalTo(405), equalTo(422)));
     }
 
     @Test(description = "Create a pet with very long name")

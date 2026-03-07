@@ -36,7 +36,7 @@ public class CareersPageTests extends BaseTest {
                         "Expected at least one job listing, found: " + jobCount));
 
         boolean allMatch = Allure.step("Verify all listings match criteria",
-                jobListingsPage::verifyAllJobsMatchCriteria);
+                () -> jobListingsPage.verifyAllJobsMatchCriteria(location));
         String summary = jobListingsPage.getLastVerificationSummary();
         Allure.step("Assert: all listings match Position/Department/Location",
                 () -> Assert.assertTrue(allMatch, summary));

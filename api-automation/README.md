@@ -52,6 +52,8 @@ api-automation/
 
 ## Test Scenarios (27 total)
 
+**Note on negative tests:** `createPetWithEmptyBody` and `createPetWithNegativeId` assert that the API rejects invalid input (expect 4xx). The public Petstore API returns 200 for these cases—a known permissive behavior. These tests document the expected contract; against a properly validating API they would pass.
+
 ### Create Pet (8 tests)
 
 | Test | Type | Description |
@@ -60,9 +62,9 @@ api-automation/
 | createPetWithRequiredFieldsOnly | Positive | Only name + photoUrls |
 | createPetWithPendingStatus | Positive | status=pending |
 | createPetWithSoldStatus | Positive | status=sold |
-| createPetWithInvalidJson | Negative | Invalid JSON body |
-| createPetWithEmptyBody | Negative | Empty `{}` body |
-| createPetWithNegativeId | Negative | id=-1 |
+| createPetWithInvalidJson | Negative | Invalid JSON body → 4xx |
+| createPetWithEmptyBody | Negative | Empty `{}` (missing required fields) → expect 4xx |
+| createPetWithNegativeId | Negative | id=-1 → expect 4xx |
 | createPetWithVeryLongName | Negative | 1000-character name |
 
 ### Read Pet (8 tests)

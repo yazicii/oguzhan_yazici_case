@@ -20,7 +20,6 @@ import java.util.Set;
 /**
  * Page Object for the careers open-positions page.
  * Handles filter dropdowns, job listing verification, and View Role navigation.
- *
  * Uses @FindBy for stable-state element access and By constants inside
  * wait conditions / lambdas where fresh DOM lookups are required.
  */
@@ -225,7 +224,7 @@ public class JobListingsPage extends BasePage {
     // ═══════════════════════════════════════════════════════════
 
     @Step("Verify all job listings match criteria (Position/Department/Location)")
-    public boolean verifyAllJobsMatchCriteria() {
+    public boolean verifyAllJobsMatchCriteria(String expectedLocation) {
         try {
             List<String> cardTexts = collectCardTexts();
             if (cardTexts.isEmpty()) {
@@ -239,7 +238,7 @@ public class JobListingsPage extends BasePage {
             String lastFailExcerpt = "";
             String lastFailReason = "";
 
-            log.info("\n=== Verifying Job Listings ===");
+            log.info("\n=== Verifying Job Listings (expected location: {}) ===", expectedLocation);
 
             for (int i = 0; i < cardTexts.size(); i++) {
                 int cardNum = i + 1;
@@ -249,31 +248,29 @@ public class JobListingsPage extends BasePage {
                         ? text.substring(0, CARD_EXCERPT_LENGTH).trim() + "..." : text.trim();
 
                 boolean hasQA = lower.contains("quality assurance") || lower.contains("qa");
-                boolean hasIstanbul = lower.contains("istanbul");
+                boolean locationMatches = locationMatchesFilter(lower, expectedLocation);
 
-                if (!hasQA || !hasIstanbul) {
+                if (!hasQA || !locationMatches) {
                     lastFailIndex = cardNum;
                     lastFailExcerpt = excerpt;
-                    lastFailReason = String.format("Not a QA Istanbul card (QA=%s, Istanbul=%s)", hasQA, hasIstanbul);
+                    lastFailReason = String.format("Not a QA card for location '%s' (QA=%s, location=%s)", expectedLocation, hasQA, locationMatches);
                     log.debug("[Card #{}] Skipped: {}", cardNum, lastFailReason);
                     continue;
                 }
 
                 total++;
-                boolean positionOk = hasQA;
                 boolean departmentOk = lower.contains("quality assurance");
-                boolean locationOk = hasIstanbul;
 
                 log.info("[Card #{}] {}", cardNum, excerpt);
-                log.info("[Card #{}] Position={}, Department={}, Location={}", cardNum, positionOk, departmentOk, locationOk);
+                log.info("[Card #{}] Position={}, Department={}, Location={}", cardNum, hasQA, departmentOk, locationMatches);
 
-                if (positionOk && departmentOk && locationOk) {
+                if (departmentOk) {
                     matched++;
                     log.info("[Card #{}] PASS", cardNum);
                 } else {
                     lastFailIndex = cardNum;
                     lastFailExcerpt = excerpt;
-                    lastFailReason = String.format("position=%s, department=%s, location=%s", positionOk, departmentOk, locationOk);
+                    lastFailReason = String.format("position=%s, department=%s, location=%s", hasQA, departmentOk, locationMatches);
                     log.warn("[Card #{}] FAIL: {}", cardNum, lastFailReason);
                 }
             }
@@ -282,16 +279,16 @@ public class JobListingsPage extends BasePage {
 
             boolean success = total > 0 && matched == total;
             if (success) {
-                lastVerificationSummary = String.format("All %d QA Istanbul cards match criteria.", total);
+                lastVerificationSummary = String.format("All %d QA cards for '%s' match criteria.", total, expectedLocation);
             } else if (lastFailIndex > 0) {
                 lastVerificationSummary = String.format(
-                        "Expected: all QA Istanbul cards to match. Found: %d total, %d matched, %d failed. "
+                        "Expected: all QA cards for '%s' to match. Found: %d total, %d matched, %d failed. "
                         + "Last failing card #%d: \"%s\" | %s",
-                        total, matched, total - matched, lastFailIndex,
+                        expectedLocation, total, matched, total - matched, lastFailIndex,
                         lastFailExcerpt.replace("\"", "'"), lastFailReason);
             } else {
                 lastVerificationSummary = String.format(
-                        "No QA Istanbul cards found among %d card(s).", cardTexts.size());
+                        "No QA cards for '%s' found among %d card(s).", expectedLocation, cardTexts.size());
             }
             return success;
         } catch (Exception e) {
@@ -303,6 +300,15 @@ public class JobListingsPage extends BasePage {
 
     public String getLastVerificationSummary() {
         return lastVerificationSummary;
+    }
+
+    private boolean locationMatchesFilter(String cardTextLower, String expectedLocation) {
+        if (expectedLocation == null || expectedLocation.isBlank()) return true;
+        String[] tokens = expectedLocation.split("[,\\s]+");
+        for (String token : tokens) {
+            if (!token.isBlank() && cardTextLower.contains(token.toLowerCase())) return true;
+        }
+        return false;
     }
 
     private List<String> collectCardTexts() {
@@ -358,7 +364,7 @@ public class JobListingsPage extends BasePage {
             for (WebElement el : els) {
                 if (el.isDisplayed()) {
                     String t = el.getText();
-                    if (t != null && !t.isBlank() && !t.equalsIgnoreCase("View Role")) return t.trim();
+                    if (!t.isBlank() && !t.equalsIgnoreCase("View Role")) return t.trim();
                 }
             }
         } catch (Exception e) {
