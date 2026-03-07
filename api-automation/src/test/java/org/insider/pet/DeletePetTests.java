@@ -15,6 +15,8 @@ import static org.hamcrest.Matchers.*;
 @Story("Delete Pet")
 public class DeletePetTests extends BaseApiTest {
 
+    private static final String PET_NOT_FOUND_MESSAGE = "Pet not found";
+
     private PetApiClient petApi;
 
     @BeforeClass(alwaysRun = true)
@@ -41,7 +43,8 @@ public class DeletePetTests extends BaseApiTest {
     @Description("DELETE /pet/{petId} — Delete existing pet and verify it returns 404")
     public void deleteExistingPet() {
         long id = uniquePetId();
-        createPetForDeletion(id, "ToBeDeleted");
+        String name = "ToBeDeleted";
+        createPetForDeletion(id, name);
 
         petApi.deletePet(id)
                 .then()
@@ -57,7 +60,8 @@ public class DeletePetTests extends BaseApiTest {
     @Description("DELETE /pet/{petId} — After deletion, GET returns 'Pet not found' message")
     public void deletePetVerifyNotFoundMessage() {
         long petId = uniquePetId();
-        createPetForDeletion(petId, "DeleteMessageTest");
+        String name = "DeleteMessageTest";
+        createPetForDeletion(petId, name);
 
         petApi.deletePet(petId)
                 .then()
@@ -66,7 +70,7 @@ public class DeletePetTests extends BaseApiTest {
         petApi.getPetById(petId)
                 .then()
                 .statusCode(404)
-                .body("message", equalTo("Pet not found"));
+                .body("message", equalTo(PET_NOT_FOUND_MESSAGE));
     }
 
     @Test(description = "Create, delete, recreate — full lifecycle")
@@ -74,6 +78,7 @@ public class DeletePetTests extends BaseApiTest {
     @Description("Create → delete → recreate — full lifecycle test")
     public void createDeleteRecreateLifecycle() {
         long petId = uniquePetId();
+        String nameAfterRecreate = "LifecyclePetReborn";
 
         createPetForDeletion(petId, "LifecyclePet");
 
@@ -85,12 +90,12 @@ public class DeletePetTests extends BaseApiTest {
                 .then()
                 .statusCode(404);
 
-        createPetForDeletion(petId, "LifecyclePetReborn");
+        createPetForDeletion(petId, nameAfterRecreate);
 
         petApi.getPetById(petId)
                 .then()
                 .statusCode(200)
-                .body("name", equalTo("LifecyclePetReborn"));
+                .body("name", equalTo(nameAfterRecreate));
     }
 
     // ── NEGATIVE SCENARIOS ──
@@ -99,9 +104,11 @@ public class DeletePetTests extends BaseApiTest {
     @Severity(SeverityLevel.NORMAL)
     @Description("DELETE /pet/{petId} — Expect 404 when deleting non-existent pet")
     public void deleteNonExistentPet() {
-        petApi.deletePet(777777777L)
+        long nonExistentId = 777777777L;
+        petApi.deletePet(nonExistentId)
                 .then()
-                .statusCode(404);
+                .statusCode(404)
+                .body("message", notNullValue());
     }
 
     @Test(description = "Delete the same pet twice")
@@ -109,7 +116,8 @@ public class DeletePetTests extends BaseApiTest {
     @Description("DELETE /pet/{petId} — Expect 404 on second deletion of the same pet")
     public void deleteSamePetTwice() {
         long petId = uniquePetId();
-        createPetForDeletion(petId, "DoubleDel");
+        String name = "DoubleDel";
+        createPetForDeletion(petId, name);
 
         petApi.deletePet(petId)
                 .then()
@@ -117,6 +125,7 @@ public class DeletePetTests extends BaseApiTest {
 
         petApi.deletePet(petId)
                 .then()
-                .statusCode(404);
+                .statusCode(404)
+                .body("message", equalTo(PET_NOT_FOUND_MESSAGE));
     }
 }

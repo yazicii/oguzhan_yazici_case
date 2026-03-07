@@ -25,16 +25,32 @@ public class UpdatePetTests extends BaseApiTest {
         petApi = new PetApiClient(spec);
     }
 
+    private String seedName;
+    private String seedStatus;
+    private long seedCategoryId;
+    private String seedCategoryName;
+    private List<String> seedPhotoUrls;
+    private long seedTagId;
+    private String seedTagName;
+
     @BeforeMethod(alwaysRun = true)
     public void seedPet() {
         petId = uniquePetId();
+        seedName = "OriginalName";
+        seedStatus = "available";
+        seedCategoryId = 1L;
+        seedCategoryName = "Dogs";
+        seedPhotoUrls = List.of("https://example.com/original.jpg");
+        seedTagId = 1L;
+        seedTagName = "calm";
+
         Pet seed = Pet.builder()
                 .id(petId)
-                .name("OriginalName")
-                .status("available")
-                .category(1L, "Dogs")
-                .photoUrls(List.of("https://example.com/original.jpg"))
-                .tags(List.of(new Tag(1L, "calm")))
+                .name(seedName)
+                .status(seedStatus)
+                .category(seedCategoryId, seedCategoryName)
+                .photoUrls(seedPhotoUrls)
+                .tags(List.of(new Tag(seedTagId, seedTagName)))
                 .build();
         petApi.createPet(seed)
                 .then()
@@ -47,81 +63,109 @@ public class UpdatePetTests extends BaseApiTest {
     @Severity(SeverityLevel.CRITICAL)
     @Description("PUT /pet — Update pet name")
     public void updatePetName() {
+        String newName = "UpdatedName";
+        String expectedStatus = seedStatus;
+
         Pet updated = Pet.builder()
                 .id(petId)
-                .name("UpdatedName")
-                .status("available")
-                .photoUrls(List.of("https://example.com/original.jpg"))
+                .name(newName)
+                .status(expectedStatus)
+                .photoUrls(seedPhotoUrls)
                 .build();
 
         petApi.updatePet(updated)
                 .then()
                 .statusCode(200)
-                .body("name", equalTo("UpdatedName"));
+                .body("id", equalTo((int) petId))
+                .body("name", equalTo(newName))
+                .body("status", equalTo(expectedStatus))
+                .body("photoUrls", notNullValue());
 
         petApi.getPetById(petId)
                 .then()
                 .statusCode(200)
-                .body("name", equalTo("UpdatedName"));
+                .body("name", equalTo(newName));
     }
 
     @Test(description = "Update pet status from available to sold")
     @Severity(SeverityLevel.CRITICAL)
     @Description("PUT /pet — Update status from available to sold")
     public void updatePetStatus() {
+        String newStatus = "sold";
+
         Pet updated = Pet.builder()
                 .id(petId)
-                .name("OriginalName")
-                .status("sold")
-                .photoUrls(List.of("https://example.com/original.jpg"))
+                .name(seedName)
+                .status(newStatus)
+                .photoUrls(seedPhotoUrls)
                 .build();
 
         petApi.updatePet(updated)
                 .then()
                 .statusCode(200)
-                .body("status", equalTo("sold"));
+                .body("id", equalTo((int) petId))
+                .body("name", equalTo(seedName))
+                .body("status", equalTo(newStatus))
+                .body("photoUrls", notNullValue());
     }
 
     @Test(description = "Update pet category and tags")
     @Severity(SeverityLevel.NORMAL)
     @Description("PUT /pet — Update category and tags")
     public void updatePetCategoryAndTags() {
+        long newCategoryId = 2L;
+        String newCategoryName = "Cats";
+        String tag1Name = "playful";
+        String tag2Name = "indoor";
+
         Pet updated = Pet.builder()
                 .id(petId)
-                .name("OriginalName")
-                .status("available")
-                .category(2L, "Cats")
-                .photoUrls(List.of("https://example.com/original.jpg"))
-                .tags(List.of(new Tag(2L, "playful"), new Tag(3L, "indoor")))
+                .name(seedName)
+                .status(seedStatus)
+                .category(newCategoryId, newCategoryName)
+                .photoUrls(seedPhotoUrls)
+                .tags(List.of(new Tag(2L, tag1Name), new Tag(3L, tag2Name)))
                 .build();
 
         petApi.updatePet(updated)
                 .then()
                 .statusCode(200)
-                .body("category.name", equalTo("Cats"))
+                .body("id", equalTo((int) petId))
+                .body("category.id", equalTo((int) newCategoryId))
+                .body("category.name", equalTo(newCategoryName))
                 .body("tags.size()", equalTo(2))
-                .body("tags[0].name", equalTo("playful"));
+                .body("tags[0].name", equalTo(tag1Name))
+                .body("tags[1].name", equalTo(tag2Name));
     }
 
     @Test(description = "Full update — change all fields at once")
     @Severity(SeverityLevel.NORMAL)
     @Description("PUT /pet — Update all fields at once")
     public void fullUpdateAllFields() {
+        String newName = "CompletelyNew";
+        String newStatus = "pending";
+        String newCategoryName = "Birds";
+        List<String> newPhotoUrls = List.of("https://example.com/new1.jpg", "https://example.com/new2.jpg");
+        String newTagName = "exotic";
+
         Pet updated = Pet.builder()
                 .id(petId)
-                .name("CompletelyNew")
-                .status("pending")
-                .category(3L, "Birds")
-                .photoUrls(List.of("https://example.com/new1.jpg", "https://example.com/new2.jpg"))
-                .tags(List.of(new Tag(4L, "exotic")))
+                .name(newName)
+                .status(newStatus)
+                .category(3L, newCategoryName)
+                .photoUrls(newPhotoUrls)
+                .tags(List.of(new Tag(4L, newTagName)))
                 .build();
 
         petApi.updatePet(updated)
                 .then()
                 .statusCode(200)
-                .body("name", equalTo("CompletelyNew"))
-                .body("status", equalTo("pending"))
-                .body("category.name", equalTo("Birds"));
+                .body("id", equalTo((int) petId))
+                .body("name", equalTo(newName))
+                .body("status", equalTo(newStatus))
+                .body("category.name", equalTo(newCategoryName))
+                .body("photoUrls.size()", equalTo(newPhotoUrls.size()))
+                .body("tags[0].name", equalTo(newTagName));
     }
 
     // ── NEGATIVE SCENARIOS ──
@@ -130,11 +174,16 @@ public class UpdatePetTests extends BaseApiTest {
     @Severity(SeverityLevel.NORMAL)
     @Description("PUT /pet — Update with non-existent ID (Petstore returns 200 and creates new)")
     public void updateNonExistentPet() {
+        long nonExistentId = 888888888L;
+        String name = "GhostPet";
+        String status = "available";
+        List<String> photoUrls = List.of("https://example.com/ghost.jpg");
+
         Pet ghost = Pet.builder()
-                .id(888888888L)
-                .name("GhostPet")
-                .status("available")
-                .photoUrls(List.of("https://example.com/ghost.jpg"))
+                .id(nonExistentId)
+                .name(name)
+                .status(status)
+                .photoUrls(photoUrls)
                 .build();
 
         petApi.updatePet(ghost)

@@ -31,73 +31,103 @@ public class CreatePetTests extends BaseApiTest {
     @Description("POST /pet — All fields populated: id, name, category, photoUrls, tags, status")
     public void createPetWithAllFields() {
         long id = uniquePetId();
+        String name = "Buddy";
+        String status = "available";
+        long categoryId = 1L;
+        String categoryName = "Dogs";
+        List<String> photoUrls = List.of("https://example.com/buddy.jpg");
+        long tagId = 1L;
+        String tagName = "friendly";
+
         Pet pet = Pet.builder()
                 .id(id)
-                .name("Buddy")
-                .status("available")
-                .category(1L, "Dogs")
-                .photoUrls(List.of("https://example.com/buddy.jpg"))
-                .tags(List.of(new Tag(1L, "friendly")))
+                .name(name)
+                .status(status)
+                .category(categoryId, categoryName)
+                .photoUrls(photoUrls)
+                .tags(List.of(new Tag(tagId, tagName)))
                 .build();
 
         petApi.createPet(pet)
                 .then()
                 .statusCode(200)
                 .body("id", equalTo((int) id))
-                .body("name", equalTo("Buddy"))
-                .body("status", equalTo("available"))
-                .body("category.name", equalTo("Dogs"))
-                .body("tags[0].name", equalTo("friendly"));
+                .body("name", equalTo(name))
+                .body("status", equalTo(status))
+                .body("category.id", equalTo((int) categoryId))
+                .body("category.name", equalTo(categoryName))
+                .body("photoUrls", notNullValue())
+                .body("tags[0].name", equalTo(tagName));
     }
 
     @Test(description = "Create a pet with only required fields")
     @Severity(SeverityLevel.CRITICAL)
     @Description("POST /pet — Create with only name and photoUrls")
     public void createPetWithRequiredFieldsOnly() {
+        String name = "MinimalPet";
+        List<String> photoUrls = List.of("https://example.com/minimal.jpg");
+
         Pet pet = Pet.builder()
-                .name("MinimalPet")
-                .photoUrls(List.of("https://example.com/minimal.jpg"))
+                .name(name)
+                .photoUrls(photoUrls)
                 .build();
 
         petApi.createPet(pet)
                 .then()
                 .statusCode(200)
-                .body("name", equalTo("MinimalPet"))
-                .body("id", notNullValue());
+                .body("name", equalTo(name))
+                .body("id", notNullValue())
+                .body("photoUrls", notNullValue());
     }
 
     @Test(description = "Create a pet with 'pending' status")
     @Severity(SeverityLevel.NORMAL)
     @Description("POST /pet — Create with status=pending")
     public void createPetWithPendingStatus() {
+        long id = uniquePetId();
+        String name = "PendingPet";
+        String status = "pending";
+        List<String> photoUrls = List.of("https://example.com/pending.jpg");
+
         Pet pet = Pet.builder()
-                .id(uniquePetId())
-                .name("PendingPet")
-                .status("pending")
-                .photoUrls(List.of("https://example.com/pending.jpg"))
+                .id(id)
+                .name(name)
+                .status(status)
+                .photoUrls(photoUrls)
                 .build();
 
         petApi.createPet(pet)
                 .then()
                 .statusCode(200)
-                .body("status", equalTo("pending"));
+                .body("id", notNullValue())
+                .body("name", equalTo(name))
+                .body("status", equalTo(status))
+                .body("photoUrls", notNullValue());
     }
 
     @Test(description = "Create a pet with 'sold' status")
     @Severity(SeverityLevel.NORMAL)
     @Description("POST /pet — Create with status=sold")
     public void createPetWithSoldStatus() {
+        long id = uniquePetId();
+        String name = "SoldPet";
+        String status = "sold";
+        List<String> photoUrls = List.of("https://example.com/sold.jpg");
+
         Pet pet = Pet.builder()
-                .id(uniquePetId())
-                .name("SoldPet")
-                .status("sold")
-                .photoUrls(List.of("https://example.com/sold.jpg"))
+                .id(id)
+                .name(name)
+                .status(status)
+                .photoUrls(photoUrls)
                 .build();
 
         petApi.createPet(pet)
                 .then()
                 .statusCode(200)
-                .body("status", equalTo("sold"));
+                .body("id", notNullValue())
+                .body("name", equalTo(name))
+                .body("status", equalTo(status))
+                .body("photoUrls", notNullValue());
     }
 
     // ── NEGATIVE SCENARIOS ──
@@ -126,10 +156,14 @@ public class CreatePetTests extends BaseApiTest {
     @Severity(SeverityLevel.MINOR)
     @Description("POST /pet — API should reject negative id")
     public void createPetWithNegativeId() {
+        long invalidId = -1L;
+        String name = "NegativeIdPet";
+        List<String> photoUrls = List.of("https://example.com/neg.jpg");
+
         Pet pet = Pet.builder()
-                .id(-1L)
-                .name("NegativeIdPet")
-                .photoUrls(List.of("https://example.com/neg.jpg"))
+                .id(invalidId)
+                .name(name)
+                .photoUrls(photoUrls)
                 .build();
 
         Response response = petApi.createPet(pet);
@@ -143,14 +177,18 @@ public class CreatePetTests extends BaseApiTest {
     @Description("POST /pet — Create with very long name (1000 characters)")
     public void createPetWithVeryLongName() {
         String longName = "A".repeat(1000);
+        List<String> photoUrls = List.of("https://example.com/long.jpg");
+
         Pet pet = Pet.builder()
                 .name(longName)
-                .photoUrls(List.of("https://example.com/long.jpg"))
+                .photoUrls(photoUrls)
                 .build();
 
         petApi.createPet(pet)
                 .then()
                 .statusCode(200)
-                .body("name", equalTo(longName));
+                .body("id", notNullValue())
+                .body("name", equalTo(longName))
+                .body("photoUrls", notNullValue());
     }
 }
