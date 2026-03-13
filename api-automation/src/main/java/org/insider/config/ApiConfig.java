@@ -31,6 +31,16 @@ public final class ApiConfig {
         return val != null ? Boolean.parseBoolean(val) : defaultValue;
     }
 
+    public static int getInt(String key, int defaultValue) {
+        String val = get(key, null);
+        if (val == null || val.isBlank()) return defaultValue;
+        try {
+            return Integer.parseInt(val.trim());
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
     public static String getBaseUrl() {
         return get("api.base.url", "https://petstore.swagger.io/v2");
     }

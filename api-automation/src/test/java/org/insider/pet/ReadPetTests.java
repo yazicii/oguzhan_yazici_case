@@ -1,6 +1,7 @@
 package org.insider.pet;
 
 import io.qameta.allure.*;
+import io.restassured.response.Response;
 import org.insider.BaseApiTest;
 import org.insider.client.PetApiClient;
 import org.insider.models.Pet;
@@ -42,7 +43,8 @@ public class ReadPetTests extends BaseApiTest {
                 .category(existingCategoryId, existingCategoryName)
                 .photoUrls(existingPhotoUrls)
                 .build();
-        petApi.createPet(seed);
+        Response createResponse = petApi.createPet(seed);
+        createResponse.then().statusCode(200);
     }
 
     // ── POSITIVE SCENARIOS ──

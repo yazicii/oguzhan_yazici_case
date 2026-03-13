@@ -4,6 +4,7 @@
 <suite name="Insider Suite (parallel methods)" verbose="2" parallel="methods" thread-count="4">
 
     <listeners>
+        <listener class-name="org.insider.retry.RetryAnnotationTransformer"/>
         <listener class-name="org.insider.listeners.AllureFailureListener"/>
         <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
     </listeners>

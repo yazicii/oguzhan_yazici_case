@@ -24,7 +24,12 @@ public abstract class BaseTest {
 
     /** In parallel execution, each thread gets its own driver. */
     public WebDriver getDriver() {
-        return driverHolder.get();
+        WebDriver driver = driverHolder.get();
+        if (driver == null) {
+            throw new IllegalStateException(
+                    "WebDriver not initialized. Ensure @BeforeMethod has run for this test.");
+        }
+        return driver;
     }
 
     @BeforeMethod
